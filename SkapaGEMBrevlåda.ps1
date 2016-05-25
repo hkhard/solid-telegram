@@ -1,53 +1,54 @@
-# Detta script skapar delade brevådor i MARTINSERVERA 
+# Detta script skapar delade brevÃ¥dor i MARTINSERVERA 
 #
 #    
 #
-# Created by Jan Lönnman 
+# Created by Jan LÃ¶nnman 
 #
 # Version 0.9.5		2012-03-15
 #  
+# Test commit
 ##############################################################
 
 <#
 .SYNOPSIS
-Detta script skapar delade brevlådor i MARTINSERVERA.
+Detta script skapar delade brevlï¿½dor i MARTINSERVERA.
 
 .DESCRIPTION
-Detta script utför följande: 
-   Skapar en delad brevlåda 
-   Skapar en säkerhetsgrupp 
-   Ger gruppen rättigheterna "Full Access" och "Send As" för brevlådan 
+Detta script utfï¿½r fï¿½ljande: 
+   Skapar en delad brevlï¿½da 
+   Skapar en sï¿½kerhetsgrupp 
+   Ger gruppen rï¿½ttigheterna "Full Access" och "Send As" fï¿½r brevlï¿½dan 
 
 
 NB!!!
-Scriptet stöder INTE <CommonParameters>. 
+Scriptet stï¿½der INTE <CommonParameters>. 
 
 .PARAMETER Kontonamn
-Namn på den nya delade brevlådan som skall skapas. 
+Namn pï¿½ den nya delade brevlï¿½dan som skall skapas. 
 
 .Inputs 
-Input skall vara det önskade "DisplayName" som den delade brevlådan skall ha.
+Input skall vara det ï¿½nskade "DisplayName" som den delade brevlï¿½dan skall ha.
 
 .Outputs
-Resultatet är en delad brevlåda och en korresponderande SÄKerhetsgrupp som har rättigheterna "Full Access" och "Send As".
+Resultatet ï¿½r en delad brevlï¿½da och en korresponderande Sï¿½Kerhetsgrupp som har rï¿½ttigheterna "Full Access" och "Send As".
 
 .EXAMPLE
-PS \> .\SkapaGEMBrevlåda.ps1 "GEM HSTL1 Halmstad@servera.se"
-Detta kommando visar ett typiskt användande; det skapa en ny delad brevlåda som i exemplet heter "GEM HSTL1 Halmstad@servera.se" och en tillhörande säkerhetsgrupp som heter "SÄK GEM HSTL1 Halmstad@servera.se".
+PS \> .\SkapaGEMBrevlï¿½da.ps1 "GEM HSTL1 Halmstad@servera.se"
+Detta kommando visar ett typiskt anvï¿½ndande; det skapa en ny delad brevlï¿½da som i exemplet heter "GEM HSTL1 Halmstad@servera.se" och en tillhï¿½rande sï¿½kerhetsgrupp som heter "Sï¿½K GEM HSTL1 Halmstad@servera.se".
 
 .EXAMPLE
-PS \> Get-Content InputFile.txt | .\SkapaGEMBrevlåda.ps1
-Detta kommando skickar innehållet i en textfil vidara till detta script. 
+PS \> Get-Content InputFile.txt | .\SkapaGEMBrevlï¿½da.ps1
+Detta kommando skickar innehï¿½llet i en textfil vidara till detta script. 
 
 .EXAMPLE
-PS \> "GEM HSTL1 Halmstad@servera.se", "GEM NRKL1 VRM DF@martinservera.se" | .\SkapaGEMBrevlåda.ps1
-Detta kommando skickar in två namn till detta script. 
+PS \> "GEM HSTL1 Halmstad@servera.se", "GEM NRKL1 VRM DF@martinservera.se" | .\SkapaGEMBrevlï¿½da.ps1
+Detta kommando skickar in tvï¿½ namn till detta script. 
 
 #>
 
 [CmdletBinding()]
 param(
-  [parameter(Position=0,Mandatory=$True,ValueFromPipeline=$TRUE,HelpMessage="Ange namnet på det/de konton som skall bahandlas. Tryck enter när du skrivit in alla.")] [String[]] $Kontonamn
+  [parameter(Position=0,Mandatory=$True,ValueFromPipeline=$TRUE,HelpMessage="Ange namnet pï¿½ det/de konton som skall bahandlas. Tryck enter nï¿½r du skrivit in alla.")] [String[]] $Kontonamn
 )
 
 ##############################################################
@@ -56,7 +57,7 @@ Import-Module ActiveDirectory
 $ErrorActionPreference = "SilentlyContinue"
 $msDC = "STHDCSRV169.martinservera.net" 
 $msOU = "martinservera.net/Exchangeresurser"
-$msPath = "OU=Epost,OU=Rättigheter,OU=Grupper,DC=martinservera,DC=net" 
+$msPath = "OU=Epost,OU=Rï¿½ttigheter,OU=Grupper,DC=martinservera,DC=net" 
 ##############################################################
 function ReplaceSpecialChars([string]$str) {
  $str.ToCharArray() | foreach {
@@ -64,12 +65,12 @@ function ReplaceSpecialChars([string]$str) {
   if ($_ -eq ':' ) { $_ = '' }
   if ($_ -eq '.' ) { $_ = '' }
   if ($_ -eq '@' ) { $_ = '' }
-  if ($_ -eq 'å' ) { $_ = 'a' }
-  if ($_ -eq 'ä' ) { $_ = 'a' }
-  if ($_ -eq 'ö' ) { $_ = 'o' }
-  if ($_ -eq 'Å' ) { $_ = 'Å' }
-  if ($_ -eq 'Ä' ) { $_ = 'Ä' }
-  if ($_ -eq 'Ö' ) { $_ = 'Ö' }
+  if ($_ -eq 'ï¿½' ) { $_ = 'a' }
+  if ($_ -eq 'ï¿½' ) { $_ = 'a' }
+  if ($_ -eq 'ï¿½' ) { $_ = 'o' }
+  if ($_ -eq 'ï¿½' ) { $_ = 'ï¿½' }
+  if ($_ -eq 'ï¿½' ) { $_ = 'ï¿½' }
+  if ($_ -eq 'ï¿½' ) { $_ = 'ï¿½' }
   $tmpStr += $_
  }
  $tmpstr
@@ -86,7 +87,7 @@ if ($Kontonamn -notlike "GEM *") {
    Continue
 }
 
-Write-Host "Nu bearbetas brevådan '$Kontonamn'.`n`n" -Foreground green
+Write-Host "Nu bearbetas brevï¿½dan '$Kontonamn'.`n`n" -Foreground green
 
 # Create Alias, UPN, SamAccountName, Password
 $Alias = ReplaceSpecialChars($Kontonamn)
@@ -98,14 +99,14 @@ $pass = convertto-securestring -string "P@ssw0rd" -asplaintext -force
 # Create MailBox 
 $alreadyExist = $False 
 if ([bool](Get-Mailbox -Identity ([string]$Kontonamn) -ErrorAction SilentlyContinue -DomainController $msDC)) {
-   Write-Host "Brevlådan '$Kontonamn' finns redan!`n" -Foreground yellow
+   Write-Host "Brevlï¿½dan '$Kontonamn' finns redan!`n" -Foreground yellow
    $alreadyExist = $True 
 }
 If (-not $alreadyExist) {
 New-Mailbox -Name $Kontonamn -Alias $Alias -OrganizationalUnit $msOU -UserPrincipalName $UPN -SamAccountName $Sam -FirstName '' -Initials '' -LastName '' -Password $pass -ResetPasswordOnNextLogon $false -DomainController $msDC 
 # | Out-Null
 Set-Mailbox -Identity ([string]$Kontonamn) -Type shared  -DomainController $msDC  | Out-Null
-Write-Host "Brevlådan $Kontonamn' har skapats.`n" -Foreground green
+Write-Host "Brevlï¿½dan $Kontonamn' har skapats.`n" -Foreground green
 }
 
 # Is MailBox of type SharedMailbox?
@@ -114,34 +115,34 @@ If ($MailBox.RecipientTypeDetails -eq "SharedMailbox") {   # SharedMailbox
 
    # Create Security Group 
    $alreadyExist = $False 
-   $GroupName = "SÄK " + $Kontonamn 
+   $GroupName = "Sï¿½K " + $Kontonamn 
    if ([bool](Get-ADGroup -Identity ([string]$GroupName) -Server $msDC -ErrorAction SilentlyContinue)) {
-      Write-Host "Säkerhetsgruppen '$GroupName' finns redan!`n" -Foreground yellow
+      Write-Host "Sï¿½kerhetsgruppen '$GroupName' finns redan!`n" -Foreground yellow
       $alreadyExist = $True
    }
    If (-not $alreadyExist) {
    New-ADGroup -Name $GroupName -GroupCategory Security -GroupScope Global -Path $msPath -Server $msDC  | Out-Null
-   Write-Host "Säkerhetsgruppen '$GroupName' har skapats.`n" -Foreground green
+   Write-Host "Sï¿½kerhetsgruppen '$GroupName' har skapats.`n" -Foreground green
    }
 
    # Set permissions 
-   Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess –InheritanceType All  -DomainController $msDC | Out-Null
+   Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess ï¿½InheritanceType All  -DomainController $msDC | Out-Null
    Add-ADPermission -Identity $MailBox.Name -User $GroupName -AccessRights ExtendedRight -ExtendedRights "Send As"  -DomainController $msDC | Out-Null
-   Write-Host "Rättigheter har nu satts på brevlådan '$Kontonamn'.`n"  -Foreground green
+   Write-Host "Rï¿½ttigheter har nu satts pï¿½ brevlï¿½dan '$Kontonamn'.`n"  -Foreground green
    }
 else {
-   Write-Host "Brevlådan '$Kontonamn' är inte av typen 'SharedMailbox', utan av typen" $MailBox.RecipientTypeDetails -Foreground yellow
-   Write-Host "därför har ingen säkerhetsgrupp skapats eller några rättigheter satts.`n" -Foreground yellow
+   Write-Host "Brevlï¿½dan '$Kontonamn' ï¿½r inte av typen 'SharedMailbox', utan av typen" $MailBox.RecipientTypeDetails -Foreground yellow
+   Write-Host "dï¿½rfï¿½r har ingen sï¿½kerhetsgrupp skapats eller nï¿½gra rï¿½ttigheter satts.`n" -Foreground yellow
 }  # Is MailBox of type SharedMailbox? 
 
 
 } #End PROCESS
 
 END {
-#Write-Host "`n`nOch nu har brevlåda skapats.`n" -Foreground green
-Write-Host "`nKvar att göra är:`n" -Foreground green
-Write-Host "   I förekommande fall ändra och/eller lägga till e-postadresser på brevlåda." -Foreground green
-Write-Host "   Addera användare till grupp.`n" -Foreground green
+#Write-Host "`n`nOch nu har brevlï¿½da skapats.`n" -Foreground green
+Write-Host "`nKvar att gï¿½ra ï¿½r:`n" -Foreground green
+Write-Host "   I fï¿½rekommande fall ï¿½ndra och/eller lï¿½gga till e-postadresser pï¿½ brevlï¿½da." -Foreground green
+Write-Host "   Addera anvï¿½ndare till grupp.`n" -Foreground green
 }
 
 
@@ -153,17 +154,17 @@ Write-Host "   Addera användare till grupp.`n" -Foreground green
 #Debug 
 <# 
 
-Inparameter (namnet på GEM) 
-	kontrollera rimligt format på GEM 
+Inparameter (namnet pï¿½ GEM) 
+	kontrollera rimligt format pï¿½ GEM 
 
-Om GEM inte finns som brevlåda av någon typ
-	skapa brevlåda av typ Shared
+Om GEM inte finns som brevlï¿½da av nï¿½gon typ
+	skapa brevlï¿½da av typ Shared
 sedan
 
-	Om GEM finns som brevlåda av typ Shared 
-		om grupp SÄK GEM inte finns 
-			skapa grupp SÄK GEM 
-		sätt fulla rättigheter till GEM med gruppen SÄK GEM 
+	Om GEM finns som brevlï¿½da av typ Shared 
+		om grupp Sï¿½K GEM inte finns 
+			skapa grupp Sï¿½K GEM 
+		sï¿½tt fulla rï¿½ttigheter till GEM med gruppen Sï¿½K GEM 
 
 #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 #>  
