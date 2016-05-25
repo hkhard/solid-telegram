@@ -4,20 +4,19 @@
 #
 # Created by Jan Lönnman 
 #
-# Version 0.9.5		2012-03-15
-#  
-# Test commit #2
+# Version 0.9.6		2016-05-25
+# 
 ##############################################################
 
 <#
 .SYNOPSIS
-Detta script skapar delade brevl�dor i MARTINSERVERA.
+Detta script skapar delade brevlådor i MARTINSERVERA.
 
 .DESCRIPTION
-Detta script utf�r f�ljande: 
-   Skapar en delad brevl�da 
-   Skapar en s�kerhetsgrupp 
-   Ger gruppen r�ttigheterna "Full Access" och "Send As" f�r brevl�dan 
+Detta script utför följande: 
+   Skapar en delad brevlåda 
+   Skapar en säkerhetsgrupp 
+   Ger gruppen rättigheterna "Full Access" och "Send As" för brevlådan 
 
 
 NB!!!
