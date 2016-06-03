@@ -115,7 +115,7 @@ If (-not $alreadyExist)
  Set-Mailbox -Identity ([string]$Kontonamn) -Type shared  -DomainController $msDC  | Out-Null
  LogLineWithColour -sString "Brevlådan $Kontonamn' har skapats." -sColour Green
 }
-
+4
 # Is MailBox of type SharedMailbox?
 $MailBox = Get-Mailbox -Identity ([string]$Kontonamn) -DomainController $msDC 
 If ($MailBox.RecipientTypeDetails -eq "SharedMailbox")
