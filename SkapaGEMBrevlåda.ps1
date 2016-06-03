@@ -93,7 +93,7 @@ if ($Kontonamn -notlike "GEM *")
  Continue
 }
 
-LogLineWithColour -sString "Nu bearbetas brevådan '$Kontonamn'.`n`n" -sColour green
+LogLineWithColour -sString "Nu bearbetas brevådan '$Kontonamn'." -sColour green
 
 # Create Alias, UPN, SamAccountName, Password
 $Alias = ReplaceSpecialChars($Kontonamn)
@@ -106,14 +106,14 @@ $pass = convertto-securestring -string "P@ssw0rd" -asplaintext -force
 $alreadyExist = $False 
 if ([bool](Get-Mailbox -Identity ([string]$Kontonamn) -ErrorAction SilentlyContinue -DomainController $msDC))
 {
- LogLineWithColour -sString "Brevlådan '$Kontonamn' finns redan!`n" -sColour yellow
+ LogLineWithColour -sString "Brevlådan '$Kontonamn' finns redan!" -sColour yellow
  $alreadyExist = $True 
 }
 If (-not $alreadyExist)
 {
  New-Mailbox -Name $Kontonamn -Alias $Alias -OrganizationalUnit $msOU -UserPrincipalName $UPN -SamAccountName $Sam -FirstName '' -Initials '' -LastName '' -Password $pass -ResetPasswordOnNextLogon $false -DomainController $msDC 
  Set-Mailbox -Identity ([string]$Kontonamn) -Type shared  -DomainController $msDC  | Out-Null
- LogLineWithColour -sString "Brevlådan $Kontonamn' har skapats.`n" -sColour Green
+ LogLineWithColour -sString "Brevlådan $Kontonamn' har skapats." -sColour Green
 }
 
 # Is MailBox of type SharedMailbox?
@@ -126,31 +126,31 @@ If ($MailBox.RecipientTypeDetails -eq "SharedMailbox")
    $GroupName = "SÄK " + $Kontonamn 
    if ([bool](Get-ADGroup -Identity ([string]$GroupName) -Server $msDC -ErrorAction SilentlyContinue))
    {
-    LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' finns redan!`n" -sColour yellow
+    LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' finns redan!" -sColour yellow
     $alreadyExist = $True
    }
    If (-not $alreadyExist)
    {
     New-ADGroup -Name $GroupName -GroupCategory Security -GroupScope Global -Path $msPath -Server $msDC  | Out-Null
-    LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' har skapats.`n" -sColour green
+    LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' har skapats." -sColour green
    }
 
    # Set permissions 
    Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess -InheritanceType:All  -DomainController $msDC | Out-Null
    Add-ADPermission -Identity $MailBox.Name -User $GroupName -AccessRights ExtendedRight -ExtendedRights "Send As"  -DomainController $msDC | Out-Null
-   LogLineWithColour -sString "Rättigheter har nu satts på brevlådan '$Kontonamn'.`n"  -sColour green
+   LogLineWithColour -sString "Rättigheter har nu satts på brevlådan '$Kontonamn'."  -sColour green
 }
 else 
 {
    LogLineWithColour -sString "Brevlådan '$Kontonamn' är inte av typen 'SharedMailbox', utan av typen" $MailBox.RecipientTypeDetails -sColour yellow
-   LogLineWithColour -sString "därför har ingen säkerhetsgrupp skapats eller några rättigheter satts.`n" -sColour yellow
+   LogLineWithColour -sString "därför har ingen säkerhetsgrupp skapats eller några rättigheter satts." -sColour yellow
 }  # Is MailBox of type SharedMailbox? 
 } #End PROCESS
 
 END {
-Write-Host "`nKvar att göra är:`n" -Foreground green
+Write-Host "Kvar att göra är:" -Foreground green
 Write-Host "   I förekommande fall ändra och/eller lägga till e-postadresser på brevlådan." -Foreground green
-Write-Host "   Addera användare till säkerhetsgruppen.`n" -Foreground green
+Write-Host "   Addera användare till säkerhetsgruppen." -Foreground green
 }
 
 
