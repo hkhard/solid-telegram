@@ -136,7 +136,7 @@ If ($MailBox.RecipientTypeDetails -eq "SharedMailbox")
    }
 
    # Set permissions 
-   Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess �InheritanceType All  -DomainController $msDC | Out-Null
+   Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess -InheritanceType:All  -DomainController $msDC | Out-Null
    Add-ADPermission -Identity $MailBox.Name -User $GroupName -AccessRights ExtendedRight -ExtendedRights "Send As"  -DomainController $msDC | Out-Null
    LogLineWithColour -sString "Rättigheter har nu satts på brevlådan '$Kontonamn'.`n"  -sColour green
 }
