@@ -123,7 +123,7 @@ If ($MailBox.RecipientTypeDetails -eq "SharedMailbox")
    # SharedMailbox 
    # Create Security Group 
    $alreadyExist = $False 
-   $GroupName = "SÄK " + $Kontonamn 
+   $GroupName = 'SÄK $($Kontonamn)' 
    if ([bool](Get-ADGroup -Identity ([string]$GroupName) -Server $msDC -ErrorAction SilentlyContinue))
    {
     LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' finns redan!" -sColour yellow
