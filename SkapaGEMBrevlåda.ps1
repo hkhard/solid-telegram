@@ -51,14 +51,16 @@ param(
 )
 
 ##############################################################
-BEGIN {
+
 Import-Module ActiveDirectory
 . '\\sthdcsrvb174.martinservera.net\Script$\_lib\logfunctions.ps1'
 . '\\sthdcsrvb174.martinservera.net\Script$\_lib\connect-exchange.ps1'
+connect
 $ErrorActionPreference = "SilentlyContinue"
 $msDC = "STHDCSRV169.martinservera.net" 
 $msOU = "martinservera.net/Exchangeresurser"
 $msPath = "OU=Epost,OU=Rättigheter,OU=Grupper,DC=martinservera,DC=net" 
+
 ##############################################################
 function ReplaceSpecialChars([string]$str) {
  $str.ToCharArray() | foreach {
@@ -69,18 +71,16 @@ function ReplaceSpecialChars([string]$str) {
   if ($_ -eq 'å' ) { $_ = 'a' }
   if ($_ -eq 'ä' ) { $_ = 'a' }
   if ($_ -eq 'ö' ) { $_ = 'o' }
-  if ($_ -eq 'Å' ) { $_ = 'Å' }
-  if ($_ -eq 'Ä' ) { $_ = 'Ä' }
-  if ($_ -eq 'Ö' ) { $_ = 'Ö' }
+  if ($_ -eq 'Å' ) { $_ = 'A' }
+  if ($_ -eq 'Ä' ) { $_ = 'A' }
+  if ($_ -eq 'Ö' ) { $_ = 'O' }
   $tmpStr += $_
  }
  $tmpstr
 }
 ##############################################################
-}  #End BEGIN
 
-PROCESS {
-connect
+
 $scriptFileName = ($MyInvocation.MyCommand.Name).split(".")[0]
 $logFilePath = "\\sthdcsrvb174.martinservera.net\script$\_log\"
 openLogFile "$logFilePath$(($MyInvocation.MyCommand.name).split('.')[0])-$(get-date -uformat %D)-$env:USERNAME.log"
@@ -123,7 +123,7 @@ If ($MailBox.RecipientTypeDetails -eq "SharedMailbox")
    # SharedMailbox 
    # Create Security Group 
    $alreadyExist = $False 
-   $GroupName = 'SÄK $($Kontonamn)' 
+   $GroupName = "SÄK " + $Kontonamn 
    if ([bool](Get-ADGroup -Identity ([string]$GroupName) -Server $msDC -ErrorAction SilentlyContinue))
    {
     LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' finns redan!" -sColour yellow
@@ -144,31 +144,9 @@ else
 {
    LogLineWithColour -sString "Brevlådan '$Kontonamn' är inte av typen 'SharedMailbox', utan av typen" $MailBox.RecipientTypeDetails -sColour yellow
    LogLineWithColour -sString "därför har ingen säkerhetsgrupp skapats eller några rättigheter satts." -sColour yellow
-}  # Is MailBox of type SharedMailbox? 
-} #End PROCESS
+}  
 
-END {
+
 Write-Host "Kvar att göra är:" -Foreground green
 Write-Host "   I förekommande fall ändra och/eller lägga till e-postadresser på brevlådan." -Foreground green
 Write-Host "   Addera användare till säkerhetsgruppen." -Foreground green
-}
-
-
-##############################################################
-#Debug 
-<# 
-
-Inparameter (namnet p� GEM) 
-	kontrollera rimligt format p� GEM 
-
-Om GEM inte finns som brevl�da av n�gon typ
-	skapa brevl�da av typ Shared
-sedan
-
-	Om GEM finns som brevl�da av typ Shared 
-		om grupp S�K GEM inte finns 
-			skapa grupp S�K GEM 
-		s�tt fulla r�ttigheter till GEM med gruppen S�K GEM 
-
-#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-#>  
