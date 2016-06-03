@@ -20,43 +20,45 @@ Detta script utför följande:
 
 
 NB!!!
-Scriptet st�der INTE <CommonParameters>. 
+Scriptet stödjer INTE <CommonParameters>. 
 
 .PARAMETER Kontonamn
-Namn p� den nya delade brevl�dan som skall skapas. 
+Namn på den nya delade brevlådan som skall skapas. 
 
 .Inputs 
-Input skall vara det �nskade "DisplayName" som den delade brevl�dan skall ha.
+Input skall vara det önskade "DisplayName" som den delade brevlådan skall ha.
 
 .Outputs
-Resultatet �r en delad brevl�da och en korresponderande S�Kerhetsgrupp som har r�ttigheterna "Full Access" och "Send As".
+Resultatet är en delad brevlåda och en korresponderande SäKerhetsgrupp som har rättigheterna "Full Access" och "Send As".
 
 .EXAMPLE
-PS \> .\SkapaGEMBrevl�da.ps1 "GEM HSTL1 Halmstad@servera.se"
-Detta kommando visar ett typiskt anv�ndande; det skapa en ny delad brevl�da som i exemplet heter "GEM HSTL1 Halmstad@servera.se" och en tillh�rande s�kerhetsgrupp som heter "S�K GEM HSTL1 Halmstad@servera.se".
+PS \> .\SkapaGEMBrevlåda.ps1 "GEM HSTL1 Halmstad@servera.se"
+Detta kommando visar ett typiskt användande; det skapa en ny delad brevlåda som i exemplet heter "GEM HSTL1 Halmstad@servera.se" och en tillhörande säkerhetsgrupp som heter "SÄK GEM HSTL1 Halmstad@servera.se".
 
 .EXAMPLE
-PS \> Get-Content InputFile.txt | .\SkapaGEMBrevl�da.ps1
-Detta kommando skickar inneh�llet i en textfil vidara till detta script. 
+PS \> Get-Content InputFile.txt | .\SkapaGEMBrevlåda.ps1
+Detta kommando skickar innehållet i en textfil vidara till detta script. 
 
 .EXAMPLE
-PS \> "GEM HSTL1 Halmstad@servera.se", "GEM NRKL1 VRM DF@martinservera.se" | .\SkapaGEMBrevl�da.ps1
-Detta kommando skickar in tv� namn till detta script. 
+PS \> "GEM HSTL1 Halmstad@servera.se", "GEM NRKL1 VRM DF@martinservera.se" | .\SkapaGEMBrevlåda.ps1
+Detta kommando skickar in två namn till detta script. 
 
 #>
 
 [CmdletBinding()]
 param(
-  [parameter(Position=0,Mandatory=$True,ValueFromPipeline=$TRUE,HelpMessage="Ange namnet p� det/de konton som skall bahandlas. Tryck enter n�r du skrivit in alla.")] [String[]] $Kontonamn
+  [parameter(Position=0,Mandatory=$True,ValueFromPipeline=$TRUE,HelpMessage="Ange namnet på det/de konton som skall bahandlas. Tryck enter när du skrivit in alla.")] [String[]] $Kontonamn
 )
 
 ##############################################################
 BEGIN {
-Import-Module ActiveDirectory 
+Import-Module ActiveDirectory
+. '\\sthdcsrvb174.martinservera.net\Script$\_lib\logfunctions.ps1'
+. '\\sthdcsrvb174.martinservera.net\Script$\_lib\connect-exchange.ps1'
 $ErrorActionPreference = "SilentlyContinue"
 $msDC = "STHDCSRV169.martinservera.net" 
 $msOU = "martinservera.net/Exchangeresurser"
-$msPath = "OU=Epost,OU=R�ttigheter,OU=Grupper,DC=martinservera,DC=net" 
+$msPath = "OU=Epost,OU=Rättigheter,OU=Grupper,DC=martinservera,DC=net" 
 ##############################################################
 function ReplaceSpecialChars([string]$str) {
  $str.ToCharArray() | foreach {
@@ -64,12 +66,12 @@ function ReplaceSpecialChars([string]$str) {
   if ($_ -eq ':' ) { $_ = '' }
   if ($_ -eq '.' ) { $_ = '' }
   if ($_ -eq '@' ) { $_ = '' }
-  if ($_ -eq '�' ) { $_ = 'a' }
-  if ($_ -eq '�' ) { $_ = 'a' }
-  if ($_ -eq '�' ) { $_ = 'o' }
-  if ($_ -eq '�' ) { $_ = '�' }
-  if ($_ -eq '�' ) { $_ = '�' }
-  if ($_ -eq '�' ) { $_ = '�' }
+  if ($_ -eq 'å' ) { $_ = 'a' }
+  if ($_ -eq 'ä' ) { $_ = 'a' }
+  if ($_ -eq 'ö' ) { $_ = 'o' }
+  if ($_ -eq 'Å' ) { $_ = 'Å' }
+  if ($_ -eq 'Ä' ) { $_ = 'Ä' }
+  if ($_ -eq 'Ö' ) { $_ = 'Ö' }
   $tmpStr += $_
  }
  $tmpstr
@@ -78,15 +80,20 @@ function ReplaceSpecialChars([string]$str) {
 }  #End BEGIN
 
 PROCESS {
+connect
+$scriptFileName = ($MyInvocation.MyCommand.Name).split(".")[0]
+$logFilePath = "\\sthdcsrvb174.martinservera.net\script$\_log\"
+openLogFile "$logFilePath$(($MyInvocation.MyCommand.name).split('.')[0])-$(get-date -uformat %D)-$env:USERNAME.log"
 $alreadyExist = $False
 
 #Check parameter "Kontonamn" for sanity                     #TBC 
-if ($Kontonamn -notlike "GEM *") {
-   Write-Host "Namnet $Kontonamn verkar inte korrekt!" -Foreground red
-   Continue
+if ($Kontonamn -notlike "GEM *")
+{
+ LogLineWithColour -sString "Namnet $Kontonamn verkar inte vara korrekt!" -sColour Red
+ Continue
 }
 
-Write-Host "Nu bearbetas brev�dan '$Kontonamn'.`n`n" -Foreground green
+LogLineWithColour -sString "Nu bearbetas brevådan '$Kontonamn'.`n`n" -sColour green
 
 # Create Alias, UPN, SamAccountName, Password
 $Alias = ReplaceSpecialChars($Kontonamn)
@@ -97,56 +104,54 @@ $pass = convertto-securestring -string "P@ssw0rd" -asplaintext -force
 
 # Create MailBox 
 $alreadyExist = $False 
-if ([bool](Get-Mailbox -Identity ([string]$Kontonamn) -ErrorAction SilentlyContinue -DomainController $msDC)) {
-   Write-Host "Brevl�dan '$Kontonamn' finns redan!`n" -Foreground yellow
-   $alreadyExist = $True 
+if ([bool](Get-Mailbox -Identity ([string]$Kontonamn) -ErrorAction SilentlyContinue -DomainController $msDC))
+{
+ LogLineWithColour -sString "Brevlådan '$Kontonamn' finns redan!`n" -sColour yellow
+ $alreadyExist = $True 
 }
-If (-not $alreadyExist) {
-New-Mailbox -Name $Kontonamn -Alias $Alias -OrganizationalUnit $msOU -UserPrincipalName $UPN -SamAccountName $Sam -FirstName '' -Initials '' -LastName '' -Password $pass -ResetPasswordOnNextLogon $false -DomainController $msDC 
-# | Out-Null
-Set-Mailbox -Identity ([string]$Kontonamn) -Type shared  -DomainController $msDC  | Out-Null
-Write-Host "Brevl�dan $Kontonamn' har skapats.`n" -Foreground green
+If (-not $alreadyExist)
+{
+ New-Mailbox -Name $Kontonamn -Alias $Alias -OrganizationalUnit $msOU -UserPrincipalName $UPN -SamAccountName $Sam -FirstName '' -Initials '' -LastName '' -Password $pass -ResetPasswordOnNextLogon $false -DomainController $msDC 
+ Set-Mailbox -Identity ([string]$Kontonamn) -Type shared  -DomainController $msDC  | Out-Null
+ LogLineWithColour -sString "Brevlådan $Kontonamn' har skapats.`n" -sColour Green
 }
 
 # Is MailBox of type SharedMailbox?
 $MailBox = Get-Mailbox -Identity ([string]$Kontonamn) -DomainController $msDC 
-If ($MailBox.RecipientTypeDetails -eq "SharedMailbox") {   # SharedMailbox 
-
+If ($MailBox.RecipientTypeDetails -eq "SharedMailbox")
+{ 
+   # SharedMailbox 
    # Create Security Group 
    $alreadyExist = $False 
-   $GroupName = "S�K " + $Kontonamn 
-   if ([bool](Get-ADGroup -Identity ([string]$GroupName) -Server $msDC -ErrorAction SilentlyContinue)) {
-      Write-Host "S�kerhetsgruppen '$GroupName' finns redan!`n" -Foreground yellow
-      $alreadyExist = $True
+   $GroupName = "SÄK " + $Kontonamn 
+   if ([bool](Get-ADGroup -Identity ([string]$GroupName) -Server $msDC -ErrorAction SilentlyContinue))
+   {
+    LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' finns redan!`n" -sColour yellow
+    $alreadyExist = $True
    }
-   If (-not $alreadyExist) {
-   New-ADGroup -Name $GroupName -GroupCategory Security -GroupScope Global -Path $msPath -Server $msDC  | Out-Null
-   Write-Host "S�kerhetsgruppen '$GroupName' har skapats.`n" -Foreground green
+   If (-not $alreadyExist)
+   {
+    New-ADGroup -Name $GroupName -GroupCategory Security -GroupScope Global -Path $msPath -Server $msDC  | Out-Null
+    LogLineWithColour -sString "Säkerhetsgruppen '$GroupName' har skapats.`n" -sColour green
    }
 
    # Set permissions 
-   Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess �InheritanceType All  -DomainController $msDC | Out-Null
+   Add-MailboxPermission -Identity ([string]$Kontonamn) -User $GroupName -AccessRights:FullAccess -InheritanceType:All  -DomainController $msDC | Out-Null
    Add-ADPermission -Identity $MailBox.Name -User $GroupName -AccessRights ExtendedRight -ExtendedRights "Send As"  -DomainController $msDC | Out-Null
-   Write-Host "R�ttigheter har nu satts p� brevl�dan '$Kontonamn'.`n"  -Foreground green
-   }
-else {
-   Write-Host "Brevl�dan '$Kontonamn' �r inte av typen 'SharedMailbox', utan av typen" $MailBox.RecipientTypeDetails -Foreground yellow
-   Write-Host "d�rf�r har ingen s�kerhetsgrupp skapats eller n�gra r�ttigheter satts.`n" -Foreground yellow
+   LogLineWithColour -sString "Rättigheter har nu satts på brevlådan '$Kontonamn'.`n"  -sColour green
+}
+else 
+{
+   LogLineWithColour -sString "Brevlådan '$Kontonamn' är inte av typen 'SharedMailbox', utan av typen" $MailBox.RecipientTypeDetails -sColour yellow
+   LogLineWithColour -sString "därför har ingen säkerhetsgrupp skapats eller några rättigheter satts.`n" -sColour yellow
 }  # Is MailBox of type SharedMailbox? 
-
-
 } #End PROCESS
 
 END {
-#Write-Host "`n`nOch nu har brevl�da skapats.`n" -Foreground green
-Write-Host "`nKvar att g�ra �r:`n" -Foreground green
-Write-Host "   I f�rekommande fall �ndra och/eller l�gga till e-postadresser p� brevl�da." -Foreground green
-Write-Host "   Addera anv�ndare till grupp.`n" -Foreground green
+Write-Host "`nKvar att göra är:`n" -Foreground green
+Write-Host "   I förekommande fall ändra och/eller lägga till e-postadresser på brevlådan." -Foreground green
+Write-Host "   Addera användare till säkerhetsgruppen.`n" -Foreground green
 }
-
-
-
-
 
 
 ##############################################################
